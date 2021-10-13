@@ -1,5 +1,7 @@
 # Datadog Forwarder
 
+# This repo should only be used for EKS Cloudwatch Logs. 
+
 The Datadog Forwarder is an AWS Lambda function that ships logs, custom metrics, and traces from your environment to Datadog. The Forwarder can:
 
 - Forward CloudWatch, ELB, S3, CloudTrail, VPC, SNS, and CloudFront logs to Datadog
