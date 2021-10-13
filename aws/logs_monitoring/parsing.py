@@ -435,7 +435,10 @@ def awslogs_handler(event, context, metadata):
         # Reading line by line avoid a bug where gzip would take a very long
         # time (>5min) for file around 60MB gzipped
         data = b"".join(BufferedReader(decompress_stream))
-    logs = json.loads(data)
+    full_logs = json.loads(data)
+    if ("default" in full_logs["logStream"]) and not ("datadog" in full_logs["logStream"] or "kubernetes" in full_logs["logStream"] ):
+        logs=full_logs
+    
 
     # Set the source on the logs
     source = logs.get("logGroup", "cloudwatch")
@@ -446,7 +449,7 @@ def awslogs_handler(event, context, metadata):
         source = "cloudtrail"
     metadata[DD_SOURCE] = parse_event_source(event, source)
 
-    metadata[DD_SERVICE] = get_service_from_tags(metadata)
+    metadata[DD_SERVICE] = logs["logStream"].split("containers.")[1].split("-")[0]
 
     # Build aws attributes
     aws_attributes = {
@@ -461,7 +464,7 @@ def awslogs_handler(event, context, metadata):
 
     # Set host as log group where cloudwatch is source
     if metadata[DD_SOURCE] == "cloudwatch" or metadata.get(DD_HOST, None) == None:
-        metadata[DD_HOST] = aws_attributes["aws"]["awslogs"]["logGroup"]
+        metadata[DD_HOST] = aws_attributes["aws"]["awslogs"]["logStream"].split("containers.")[1].split("_")[0]
 
     # When parsing rds logs, use the cloudwatch log group name to derive the
     # rds instance name, and add the log name of the stream ingested
@@ -510,7 +513,8 @@ def awslogs_handler(event, context, metadata):
 
     # Create and send structured logs to Datadog
     for log in logs["logEvents"]:
-        yield merge_dicts(log, aws_attributes)
+        split_log = log["message"].split(" F ")[1]
+        yield merge_dicts(split_log, [])
 
 
 def merge_dicts(a, b, path=None):
