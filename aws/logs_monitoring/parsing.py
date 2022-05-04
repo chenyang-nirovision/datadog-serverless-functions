@@ -518,7 +518,8 @@ def awslogs_handler(event, context, metadata):
 
     # Create and send structured logs to Datadog
     for log in logs["logEvents"]:
-        split_log = log["message"].split(" F ")[1]
+        log_json_obj= log["message"]
+        split_log = json.loads(log_json_obj)["log"].split(" F ")[1]
         yield merge_dicts(split_log, [])
 
 
