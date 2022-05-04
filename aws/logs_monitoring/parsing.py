@@ -449,8 +449,13 @@ def awslogs_handler(event, context, metadata):
         source = "cloudtrail"
     metadata[DD_SOURCE] = parse_event_source(event, source)
 
-    metadata[DD_SERVICE] = logs["logStream"].split("containers.")[1].split("-")[0]
-
+    logstream_short_name=logs["logStream"].split("containers.")[1]
+    metadata[DD_SERVICE] = logstream_short_name.split("-")[0]
+    env_name = ["dev", "sta", "pro"]
+    
+    for i in env_name: 
+        if i in logstream_short_name:
+            metadata[DD_SERVICE] = logstream_short_name.split(("-") + i)[0]
     # Build aws attributes
     aws_attributes = {
         "aws": {
